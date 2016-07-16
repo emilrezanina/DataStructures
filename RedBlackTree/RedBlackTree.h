@@ -164,7 +164,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type& RedBlackTree<KEY_TYPE,
 {
 	if (mIsAfterLast || mIsBeforeFirst)
 		throw std::exception();
-	return *mNode->value;
+	return *mNode->Value;
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
@@ -172,13 +172,13 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type* RedBlackTree<KEY_TYPE,
 {
 	if (mIsAfterLast || mIsBeforeFirst)
 		throw std::exception();
-	return mNode->value;
+	return mNode->Value;
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator--()
 {
-	if (mIsBeforeFirst || (mNode->Left == mSentinel && mNode->Parent == NULL))
+	if (mIsBeforeFirst || (!mIsAfterLast && mNode->Left == mSentinel && mNode->Parent == NULL))
 		throw std::exception();
 	if (mIsAfterLast)
 	{
@@ -193,7 +193,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, M
 	}
 	else
 	{
-		RedBlackNode* temp = mNode;
+		std::shared_ptr<RedBlackNode> temp = mNode;
 		while (mNode->Parent != NULL && mNode == mNode->Parent->Left)
 			mNode = mNode->Parent;
 		if (mNode->Parent == NULL)
