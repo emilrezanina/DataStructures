@@ -521,12 +521,12 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MA
 	RedBlackNode* node = mRoot;
 	while (node != mSentinel)
 	{
-		int result = key.compare(node->Value->first);
-		if (result == 0)
-		{
+		if (key == node->Value->first)
 			return iterator(node, false, false, mSentinel);
-		}
-		node = result < 0 ? node->Left : node->Right;
+		if (key < node->Value->first)
+			node = node->Left;
+		else
+			node = node->Right;
 	}
 	return end();
 }

@@ -221,3 +221,40 @@ TEST(RED_BLACK_TREE, MultipleRemoveItemsTest)
 	EXPECT_TRUE(rbTree.isEmpty());
 	EXPECT_EQ(0, rbTree.size());
 }
+
+TEST(RED_BLACK_TREE, NotFoundItemTest)
+{
+	IntStringRBTree rbTree;
+	int noFoundKey = -1;
+	IntStringRBTree::iterator noFoundItemIt = rbTree.find(noFoundKey);
+	ASSERT_EQ(rbTree.end(), noFoundItemIt);
+	size_t replicationsCount = 10;
+	for (size_t i = 0; i < replicationsCount; i++)
+	{
+		std::string value("Item_");
+		value.append(std::to_string(i));
+		rbTree.insert(i, value);
+	}
+	noFoundItemIt = rbTree.find(noFoundKey);
+	ASSERT_EQ(rbTree.end(), noFoundItemIt);
+}
+
+TEST(RED_BLACK_TREE, FindItemTest)
+{
+	IntStringRBTree rbTree;
+	int foundKey = rand() % 10;
+	std::string foundValue("Found item");
+	rbTree.insert(foundKey, foundValue);
+	IntStringRBTree::iterator foundItemIt = rbTree.find(foundKey);
+	ASSERT_FALSE(foundItemIt == rbTree.end());
+	ASSERT_TRUE(foundItemIt->second.compare(foundValue) == 0);
+	size_t replicationsCount = 10;
+	for (size_t i = 0; i < replicationsCount; i++)
+	{
+		std::string value("Item_");
+		value.append(std::to_string(i));
+		rbTree.insert(i, value);
+	}
+	ASSERT_FALSE(foundItemIt == rbTree.end());
+	ASSERT_TRUE(foundItemIt->second.compare(foundValue) == 0);
+}
