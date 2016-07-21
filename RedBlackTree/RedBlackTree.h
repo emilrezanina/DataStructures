@@ -2,7 +2,8 @@
 #ifndef RED_BLACK_TREE_H
 #define RED_BLACK_TREE_H
 
-#include <memory>
+#include "..\Headers\Mutex.h"
+#include "..\Headers\Pointer.h"
 
 //STRUCTURES
 template<typename KEY_TYPE, typename MAPPED_TYPE>
@@ -24,29 +25,38 @@ public:
 private:
 	struct RedBlackNode;
 	size_t mCount;
-	std::shared_ptr<RedBlackNode> mSentinel;
-	std::shared_ptr<RedBlackNode> mRoot;
-	void rotateLeft(std::shared_ptr<RedBlackNode> x);
-	void rotateRight(std::shared_ptr<RedBlackNode> x);
-	void restoreAfterInsert(std::shared_ptr<RedBlackNode> x);
-	void restoreAfterDelete(std::shared_ptr<RedBlackNode> x);
-	void remove(std::shared_ptr<RedBlackNode> node);
+	AutoRefPtr<RedBlackNode> mSentinel;
+	AutoRefPtr<RedBlackNode> mRoot;
+
+	void rotateLeft(RedBlackNode* x);
+	void rotateRight(RedBlackNode* x);
+	void restoreAfterInsert(RedBlackNode* x);
+	void restoreAfterDelete(RedBlackNode* x);
+	void remove(RedBlackNode* node);
 };
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 struct RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode
 {
 	value_type* Value;
-	std::shared_ptr<RedBlackNode> Left;
-	std::shared_ptr<RedBlackNode> Right;
-	std::shared_ptr<RedBlackNode> Parent;
+	AutoRefPtr<RedBlackNode> Left;
+	AutoRefPtr<RedBlackNode> Right;
+	RedBlackNode* Parent;
 	bool IsRed;
+	RefCount mRefCount;
+
 	RedBlackNode() : Value(NULL), Left(NULL), Right(NULL), Parent(NULL), IsRed(true) {}
 	RedBlackNode(const key_type& key, const mapped_type& data) : Left(NULL), Right(NULL), Parent(NULL), IsRed(true)
 	{
 		Value = new value_type(key, data);
 	}
 	~RedBlackNode() { delete Value; }
+	void reference() { mRefCount.reference(); }
+	void dereference()
+	{
+		if (mRefCount.dereference())
+			delete this;
+	}
 };
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
@@ -65,12 +75,12 @@ public:
 	bool operator==(const iterator& right) const;
 	bool operator!=(const iterator& right) const;
 private:
-	std::shared_ptr<RedBlackNode> mNode;
+	AutoRefPtr<RedBlackNode> mNode;
 	bool mIsAfterLast;
 	bool mIsBeforeFirst;
-	std::shared_ptr<RedBlackNode> mSentinel;
+	AutoRefPtr<RedBlackNode> mSentinel;
 	friend RedBlackTree;
-	iterator(std::shared_ptr<RedBlackNode> node, bool isAfterLast, bool isBeforeFirst, std::shared_ptr<RedBlackNode> sentinel);
+	iterator(RedBlackNode* node, bool isAfterLast, bool isBeforeFirst, RedBlackNode* sentinel);
 };
 
 //ITERATOR METHODS
@@ -83,7 +93,7 @@ RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::iterator(const iterator& src)
 	: mNode(src.mNode), mIsAfterLast(src.mIsAfterLast), mIsBeforeFirst(src.mIsBeforeFirst), mSentinel(src.mSentinel) {}
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::iterator(std::shared_ptr<RedBlackNode> node, bool isAfterLast, bool isBeforeFirst, std::shared_ptr<RedBlackNode> sentinel)
+RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::iterator(RedBlackNode* node, bool isAfterLast, bool isBeforeFirst, RedBlackNode* sentinel)
 	: mNode(node), mIsAfterLast(isAfterLast), mIsBeforeFirst(isBeforeFirst), mSentinel(sentinel) {}
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
@@ -117,7 +127,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, M
 	}
 	else
 	{
-		std::shared_ptr<RedBlackNode> temp = mNode;
+		RedBlackNode* temp = mNode;
 		while (mNode->Parent != NULL && mNode == mNode->Parent->Right)
 			mNode = mNode->Parent;
 		if (mNode->Parent == NULL)
@@ -193,7 +203,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, M
 	}
 	else
 	{
-		std::shared_ptr<RedBlackNode> temp = mNode;
+		RedBlackNode* temp = mNode;
 		while (mNode->Parent != NULL && mNode == mNode->Parent->Left)
 			mNode = mNode->Parent;
 		if (mNode->Parent == NULL)
@@ -217,9 +227,9 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MA
 
 //PRIVATE METHODS
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateLeft(std::shared_ptr<typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode> x)
+void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateLeft(typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode* x)
 {
-	std::shared_ptr<RedBlackNode> y = x->Right;
+	RedBlackNode* y = x->Right;
 	x->Right = y->Left;
 	if (y->Left != mSentinel)
 		y->Left->Parent = x;
@@ -240,9 +250,9 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateLeft(std::shared_ptr<typename Re
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateRight(std::shared_ptr<typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode> x)
+void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateRight(typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode* x)
 {
-	std::shared_ptr<RedBlackNode> y = x->Left;
+	RedBlackNode* y = x->Left;
 	x->Left = y->Right;
 	if (y->Right != mSentinel)
 		y->Right->Parent = x;
@@ -263,9 +273,9 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::rotateRight(std::shared_ptr<typename R
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterInsert(std::shared_ptr<typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode> x)
+void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterInsert(typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode* x)
 {
-	std::shared_ptr<RedBlackNode> y;
+	RedBlackNode* y;
 	while (x != mRoot && x->Parent != NULL && x->Parent->IsRed)
 	{
 		if (x->Parent == x->Parent->Parent->Left)
@@ -317,9 +327,9 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterInsert(std::shared_ptr<typ
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterDelete(std::shared_ptr<typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode> x)
+void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterDelete(typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode* x)
 {
-	std::shared_ptr<RedBlackNode> y;
+	RedBlackNode* y;
 	while (x != mRoot && !x->IsRed)
 	{
 		if (x == x->Parent->Left)
@@ -348,7 +358,7 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterDelete(std::shared_ptr<typ
 				}
 				y->IsRed = x->Parent->IsRed;
 				x->Parent->IsRed = false;
-				y->Right - IsRed = false;
+				y->Right->IsRed = false;
 				rotateLeft(x->Parent);
 				x = mRoot;
 			}
@@ -385,11 +395,11 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::restoreAfterDelete(std::shared_ptr<typ
 			}
 		}
 	}
-	x->isRed = false;
+	x->IsRed = false;
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(std::shared_ptr<typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode> node)
+void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode* node)
 {
 	RedBlackNode* x;
 	RedBlackNode* y;
@@ -397,9 +407,9 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(std::shared_ptr<typename RedBla
 		y = node;
 	else
 	{
-		y = node->Right;
-		while (y->Left != mSentinel)
-			y = y->Left;
+		y = node->Left;
+		while (y->Right != mSentinel)
+			y = y->Right;
 	}
 	x = y->Left != mSentinel ? y->Left : y->Right;
 	x->Parent = y->Parent;
@@ -416,14 +426,15 @@ void RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(std::shared_ptr<typename RedBla
 	}
 	if (!y->IsRed)
 		restoreAfterDelete(x);
+	if (x == mSentinel)
+		x->Parent = NULL;
 }
 
 //RED BLACK TREE METHODS
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackTree() : mCount(0)
 {
-	RedBlackNode* sentinel = new RedBlackNode();
-	mSentinel = std::shared_ptr<RedBlackNode>(sentinel);
+	mSentinel = new RedBlackNode();
 	mSentinel->IsRed = false;
 	mRoot = mSentinel;
 }
@@ -431,9 +442,8 @@ RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackTree() : mCount(0)
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MAPPED_TYPE>::insert(const key_type& key, const mapped_type& data)
 {
-	RedBlackNode* newItem = new RedBlackNode(key, data);
-	std::shared_ptr<RedBlackNode> node(newItem);
-	std::shared_ptr<RedBlackNode> temp = mRoot;
+	RedBlackNode* node = new RedBlackNode(key, data);
+	RedBlackNode* temp = mRoot;
 	while (temp != mSentinel)
 	{
 		node->Parent = temp;
@@ -464,15 +474,15 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MA
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 size_t RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(const key_type& key)
 {
-	std::shared_ptr<RedBlackNode> node;
-	int result = 0;
-	node = mRoot;
+	RedBlackNode* node = mRoot;
 	while (node != mSentinel)
 	{
-		result = key.compare(node->Value->first);
-		if (result == 0)
+		if (key == node->Value->first)
 			break;
-		node = result < 0 ? node->Left : node->Right;
+		if (key < node->Value->first)
+			node = node->Left;
+		else
+			node = node->Right;
 	}
 	if (node == mSentinel)
 		return 0;
@@ -484,7 +494,7 @@ size_t RedBlackTree<KEY_TYPE, MAPPED_TYPE>::remove(const key_type& key)
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MAPPED_TYPE>::begin()
 {
-	std::shared_ptr<RedBlackNode> node = mRoot;
+	RedBlackNode* node = mRoot;
 	if (node == mSentinel)
 		return iterator(mSentinel, true, true, mSentinel);
 	while (node->Left != mSentinel)
@@ -495,7 +505,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MA
 template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MAPPED_TYPE>::end()
 {
-	std::shared_ptr<RedBlackNode> node = mRoot;
+	RedBlackNode* node = mRoot;
 	if (node == mSentinel)
 		return iterator(mSentinel, true, true, mSentinel);
 	while (node->Right != mSentinel)
@@ -508,7 +518,7 @@ typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator RedBlackTree<KEY_TYPE, MA
 {
 	if (mRoot == mSentinel)
 		return iterator(mRoot, true, true, mSentinel);
-	std::shared_ptr<RedBlackNode> node = mRoot;
+	RedBlackNode* node = mRoot;
 	while (node != mSentinel)
 	{
 		int result = key.compare(node->Value->first);
