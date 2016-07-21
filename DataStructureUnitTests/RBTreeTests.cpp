@@ -17,7 +17,7 @@ TEST(RED_BLACK_TREE, InnerTypesTest)
 
 typedef RedBlackTree<int, std::string> IntStringRBTree;
 
-TEST(RED_BLACK_TREE, CreateTest)
+TEST(RED_BLACK_TREE, CreateEmptyTreeTest)
 {
 	IntStringRBTree rbTree;
 	EXPECT_TRUE(rbTree.isEmpty());
@@ -49,6 +49,20 @@ TEST(RED_BLACK_TREE, InsertSomeItemsTest)
 	EXPECT_TRUE(!rbTree.isEmpty());
 }
 
+TEST(RED_BLACK_TREE, InsertItemsWithSameKeyDoesntRewriteItemTest)
+{
+	IntStringRBTree rbTree;
+	int key = 0;
+	std::string firstInsert("First Insert");
+	std::string secondInsert("Second Insert");
+	rbTree.insert(key, firstInsert);
+	rbTree.insert(key, secondInsert);
+	ASSERT_EQ(1, rbTree.size());
+	IntStringRBTree::iterator beginIt = rbTree.begin();
+	ASSERT_TRUE(beginIt->second.compare(firstInsert) == 0);
+	ASSERT_FALSE(beginIt->second.compare(secondInsert) == 0);
+}
+
 TEST(RED_BLACK_TREE, BasicIteratorTest)
 {
 	int key = 1;
@@ -62,6 +76,14 @@ TEST(RED_BLACK_TREE, BasicIteratorTest)
 	ASSERT_FALSE(itBegin == itEnd);
 	IntStringRBTree::iterator itBeforeEnd = --itEnd;
 	ASSERT_EQ(itBegin, itBeforeEnd);
+}
+
+TEST(RED_BLACK_TREE, BeginAndEndIsSameForEmptyTreeTest)
+{
+	IntStringRBTree rbTree;
+	IntStringRBTree::iterator beginIt = rbTree.begin();
+	IntStringRBTree::iterator endIt = rbTree.end();
+	ASSERT_TRUE(beginIt == endIt);
 }
 
 TEST(RED_BLACK_TREE, RangeIteratorTest)
@@ -175,7 +197,6 @@ TEST(RED_BLACK_TREE, RemoveUnknownKeyReturnZeroTest)
 
 TEST(RED_BLACK_TREE, MultipleRemoveItemsTest)
 {
-
 	IntStringRBTree rbTree;
 	size_t replicationsCount = 5;
 	std::vector<IntStringRBTree::key_type> insertedKeys;
