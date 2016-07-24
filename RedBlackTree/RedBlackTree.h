@@ -60,7 +60,7 @@ struct RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode
 };
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-class RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator
+class RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator 
 {
 public:
 	iterator();
@@ -113,7 +113,7 @@ template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator++()
 {
 	if (mIsAfterLast)
-		throw std::exception();
+		throw std::out_of_range("Iterator cannot be increment.");
 	if (mIsBeforeFirst)
 	{
 		mIsBeforeFirst = false;
@@ -173,7 +173,7 @@ template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type& RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator*()
 {
 	if (mIsAfterLast || mIsBeforeFirst)
-		throw std::exception();
+		throw std::runtime_error(std::string("Cannot be dereferenced"));
 	return *mNode->Value;
 }
 
@@ -181,7 +181,7 @@ template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type* RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator->()
 {
 	if (mIsAfterLast || mIsBeforeFirst)
-		throw std::exception();
+		throw std::runtime_error(std::string("Cannot be referenced"));
 	return mNode->Value;
 }
 
@@ -189,7 +189,7 @@ template<typename KEY_TYPE, typename MAPPED_TYPE>
 typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator& RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator--()
 {
 	if (mIsBeforeFirst || (!mIsAfterLast && mNode->Left == mSentinel && mNode->Parent == NULL))
-		throw std::exception();
+		throw std::out_of_range("Iterator cannot be decrement.");
 	if (mIsAfterLast)
 	{
 		mIsAfterLast = false;

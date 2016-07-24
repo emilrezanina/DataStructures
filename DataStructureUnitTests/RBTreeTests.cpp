@@ -2,7 +2,20 @@
 #include <RedBlackTree\RedBlackTree.h>
 #include <list>
 
+#define DEFAULT_START_IDX 0
+#define DEFAULT_END_IDX 10
 
+typedef RedBlackTree<int, std::string> IntStringRBTree;
+
+inline void fillIntStringRBTreeWithAscendingRange(IntStringRBTree& aTree, size_t aStartIdx, size_t aEndIdx)
+{
+	for (size_t i = aStartIdx; i < aEndIdx; i++)
+	{
+		std::string value("Item_");
+		value.append(std::to_string(i));
+		aTree.insert(i, value);
+	}
+}
 
 TEST(RED_BLACK_TREE, InnerTypesTest)
 {
@@ -14,8 +27,6 @@ TEST(RED_BLACK_TREE, InnerTypesTest)
 	EXPECT_TRUE(typeid(MAPPED_TYPE) == typeid(IntStringRedBlackTree::mapped_type));
 	EXPECT_TRUE(typeid(VALUE_TYPE) == typeid(IntStringRedBlackTree::value_type));
 }
-
-typedef RedBlackTree<int, std::string> IntStringRBTree;
 
 TEST(RED_BLACK_TREE, CreateEmptyTreeTest)
 {
@@ -39,12 +50,7 @@ TEST(RED_BLACK_TREE, InsertSomeItemsTest)
 	srand(time(NULL));
 	size_t replicationsCount = rand() % 100;
 	std::cout << "Replications count: " << replicationsCount << std::endl;
-	for (size_t i = 0; i < replicationsCount; i++)
-	{
-		std::string value("Item_");
-		value.append(std::to_string(i));
-		rbTree.insert(i, value);
-	}
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, replicationsCount);
 	EXPECT_EQ(replicationsCount, rbTree.size());
 	EXPECT_TRUE(!rbTree.isEmpty());
 }
@@ -89,13 +95,7 @@ TEST(RED_BLACK_TREE, BeginAndEndIsSameForEmptyTreeTest)
 TEST(RED_BLACK_TREE, RangeIteratorTest)
 {
 	IntStringRBTree rbTree;
-	size_t replicationsCount = 10;
-	for (size_t i = 0; i < replicationsCount; i++)
-	{
-		std::string value("Item_");
-		value.append(std::to_string(i));
-		rbTree.insert(i, value);
-	}
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
 	IntStringRBTree::iterator itBegin, itEnd, itStep;
 	itBegin = rbTree.begin();
 	itEnd = rbTree.end();
@@ -110,13 +110,7 @@ TEST(RED_BLACK_TREE, RangeIteratorTest)
 TEST(RED_BLACK_TREE, ReverseRangeIteratorTest)
 {
 	IntStringRBTree rbTree;
-	size_t replicationsCount = 10;
-	for (size_t i = 0; i < replicationsCount; i++)
-	{
-		std::string value("Item_");
-		value.append(std::to_string(i));
-		rbTree.insert(i, value);
-	}
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
 	IntStringRBTree::iterator itBegin, itEnd, itStep;
 	itBegin = rbTree.begin();
 	itEnd = rbTree.end();
@@ -192,7 +186,6 @@ TEST(RED_BLACK_TREE, RemoveUnknownKeyReturnZeroTest)
 	rbTree.remove(doubleRemovedKey);
 	removedItemsCount = rbTree.remove(doubleRemovedKey);
 	EXPECT_EQ(0, removedItemsCount);
-
 }
 
 TEST(RED_BLACK_TREE, MultipleRemoveItemsTest)
@@ -228,13 +221,7 @@ TEST(RED_BLACK_TREE, NotFoundItemTest)
 	int noFoundKey = -1;
 	IntStringRBTree::iterator noFoundItemIt = rbTree.find(noFoundKey);
 	ASSERT_EQ(rbTree.end(), noFoundItemIt);
-	size_t replicationsCount = 10;
-	for (size_t i = 0; i < replicationsCount; i++)
-	{
-		std::string value("Item_");
-		value.append(std::to_string(i));
-		rbTree.insert(i, value);
-	}
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
 	noFoundItemIt = rbTree.find(noFoundKey);
 	ASSERT_EQ(rbTree.end(), noFoundItemIt);
 }
@@ -248,13 +235,7 @@ TEST(RED_BLACK_TREE, FindItemTest)
 	IntStringRBTree::iterator foundItemIt = rbTree.find(foundKey);
 	ASSERT_FALSE(foundItemIt == rbTree.end());
 	ASSERT_TRUE(foundItemIt->second.compare(foundValue) == 0);
-	size_t replicationsCount = 10;
-	for (size_t i = 0; i < replicationsCount; i++)
-	{
-		std::string value("Item_");
-		value.append(std::to_string(i));
-		rbTree.insert(i, value);
-	}
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
 	ASSERT_FALSE(foundItemIt == rbTree.end());
 	ASSERT_TRUE(foundItemIt->second.compare(foundValue) == 0);
 }
