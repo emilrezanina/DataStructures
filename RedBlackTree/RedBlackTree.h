@@ -60,14 +60,29 @@ struct RedBlackTree<KEY_TYPE, MAPPED_TYPE>::RedBlackNode
 };
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>
-class RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator 
+class RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator
+	: public std::iterator<std::bidirectional_iterator_tag,
+	typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type,
+	std::ptrdiff_t,
+	typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type*,
+	typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type&>
 {
 public:
 	iterator();
 	iterator(const iterator& src);
 	iterator& operator=(const iterator& src);
-	value_type& operator*();
-	value_type* operator->();
+	value_type& operator*()
+	{
+		if (mIsAfterLast || mIsBeforeFirst)
+			throw std::runtime_error(std::string("Cannot be dereferenced"));
+		return *mNode->Value;
+	}
+	value_type* operator->()
+	{
+		if (mIsAfterLast || mIsBeforeFirst)
+			throw std::runtime_error(std::string("Cannot be referenced"));
+		return mNode->Value;
+	}
 	iterator& operator++();
 	iterator operator++(int);
 	iterator& operator--();
@@ -167,22 +182,6 @@ bool RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator!=(const iterator& r
 	if (mIsAfterLast != right.mIsAfterLast || mIsBeforeFirst != right.mIsBeforeFirst)
 		return true;
 	return this->mNode != right.mNode;
-}
-
-template<typename KEY_TYPE, typename MAPPED_TYPE>
-typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type& RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator*()
-{
-	if (mIsAfterLast || mIsBeforeFirst)
-		throw std::runtime_error(std::string("Cannot be dereferenced"));
-	return *mNode->Value;
-}
-
-template<typename KEY_TYPE, typename MAPPED_TYPE>
-typename RedBlackTree<KEY_TYPE, MAPPED_TYPE>::value_type* RedBlackTree<KEY_TYPE, MAPPED_TYPE>::iterator::operator->()
-{
-	if (mIsAfterLast || mIsBeforeFirst)
-		throw std::runtime_error(std::string("Cannot be referenced"));
-	return mNode->Value;
 }
 
 template<typename KEY_TYPE, typename MAPPED_TYPE>

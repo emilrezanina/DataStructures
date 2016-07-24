@@ -100,10 +100,7 @@ TEST(RED_BLACK_TREE, RangeIteratorTest)
 	itBegin = rbTree.begin();
 	itEnd = rbTree.end();
 	size_t counter = 0;
-	for (itStep = itBegin; itStep != itEnd; ++itStep)
-	{
-		counter++;
-	}
+	std::for_each(itBegin, itEnd, [&counter](const IntStringRBTree::value_type& value) { ++counter;});
 	ASSERT_EQ(rbTree.size(), counter);
 }
 
@@ -115,10 +112,7 @@ TEST(RED_BLACK_TREE, ReverseRangeIteratorTest)
 	itBegin = rbTree.begin();
 	itEnd = rbTree.end();
 	size_t counter = 0;
-	for (itStep = itEnd; itStep != itBegin; --itStep)
-	{
-		counter++;
-	}
+	std::for_each(itBegin, itEnd, [&counter](const IntStringRBTree::value_type& value) { ++counter;});
 	ASSERT_EQ(rbTree.size(), counter);
 }
 
@@ -238,4 +232,20 @@ TEST(RED_BLACK_TREE, FindItemTest)
 	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
 	ASSERT_FALSE(foundItemIt == rbTree.end());
 	ASSERT_TRUE(foundItemIt->second.compare(foundValue) == 0);
+}
+
+TEST(RED_BLACK_TREE, UseStdFunctionOnTreeTest)
+{
+	IntStringRBTree rbTree;
+	int searchedKey = -1;
+	std::string searchedValue = "Found!";
+	rbTree.insert(searchedKey, searchedValue);
+	fillIntStringRBTreeWithAscendingRange(rbTree, DEFAULT_START_IDX, DEFAULT_END_IDX);
+	std::pair<int, std::string> pair(searchedKey, searchedValue);
+	IntStringRBTree::iterator foundIt = rbTree.find(searchedKey);
+	IntStringRBTree::iterator stdFoundIt = std::find(rbTree.begin(), rbTree.end(), IntStringRBTree::value_type(searchedKey, searchedValue));
+	IntStringRBTree::iterator endIt = rbTree.end();
+	ASSERT_FALSE(foundIt == endIt);
+	ASSERT_FALSE(stdFoundIt == endIt);
+	ASSERT_EQ(foundIt, stdFoundIt);
 }
